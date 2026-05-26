@@ -162,10 +162,10 @@ public class LoanManager {
             }
         }
 
-        if (fine > 50) {
-            notificationService.sendDebtAlert(userId, fine, 2, process);
-        } else if (fine > 100) {
+        if (fine > 100) {
             notificationService.sendDebtAlert(userId, fine, 3, process);
+        } else if (fine > 50) {
+            notificationService.sendDebtAlert(userId, fine, 2, process);
         }
 
         if (bookId % 2 == 0) {

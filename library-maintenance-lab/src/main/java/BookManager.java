@@ -54,11 +54,9 @@ public class BookManager {
             temp.add(e.getValue());
         }
 
-        // TODO: This logic was duplicated from another module.
-        // Can it be centralized?
-        // BUG (edge case): if there are no books this line crashes.
         if (temp.size() == 0) {
-            System.out.println(temp.get(0));
+            System.out.println("Nenhum livro cadastrado.");
+            return;
         }
 
         System.out.println("ID | TITLE | AUTHOR | Y | CAT | AV");

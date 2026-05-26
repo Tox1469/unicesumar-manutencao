@@ -2,6 +2,13 @@
 
 Este é o repositório utilizado na disciplina de **Manutenção de Software** do curso de **Engenharia de Software da Unicesumar Ponta Grossa**.
 
+## Integrantes
+
+| Nome | GitHub |
+|------|--------|
+| Luis Gustavo Boratto | [@Tox1469](https://github.com/Tox1469) |
+| Igor Pallisser | - |
+
 ## Mapa Mental da Disciplina
 
 - [Mapa mental (XMind)](https://app.xmind.com/share/OBzglW7X)

@@ -113,6 +113,29 @@ public class LoanManagerTest {
     }
 
     // ==========================================================
+    // Refatoracao - borrowBook() guard clauses (Atividade 4)
+    // ==========================================================
+
+    @Test
+    public void deveEmprestarLivroComSucesso() {
+        LoanManager loanManager = new LoanManager();
+        int loanId = loanManager.borrowBook(1, 1, "2026-05-01", "2026-05-20", "email", 14, "test", 0);
+        assertTrue("Emprestimo deve retornar ID positivo", loanId > 0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void deveLancarExcecaoQuandoUserIdInvalidoEmBorrow() {
+        LoanManager loanManager = new LoanManager();
+        loanManager.borrowBook(-1, 1, "2026-05-01", "2026-05-20", "email", 14, "test", 0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void deveLancarExcecaoQuandoBookIdInvalidoEmBorrow() {
+        LoanManager loanManager = new LoanManager();
+        loanManager.borrowBook(1, -1, "2026-05-01", "2026-05-20", "email", 14, "test", 0);
+    }
+
+    // ==========================================================
     // Bug #5 - calculateFineLegacy() condicao de alerta inalcancavel
     // A ordem corrigida: fine > 100 (nivel 3) antes de fine > 50 (nivel 2)
     // ==========================================================

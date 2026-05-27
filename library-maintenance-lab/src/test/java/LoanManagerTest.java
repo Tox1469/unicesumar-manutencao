@@ -79,4 +79,36 @@ public class LoanManagerTest {
         LoanManager loanManager = new LoanManager();
         loanManager.returnBook(-1, "2026-05-15", "email", 0, "test", "handler");
     }
+
+    // ==========================================================
+    // Bug #3 - countOpenLoansByBook() deve filtrar por bookId
+    // ==========================================================
+
+    @Test
+    public void deveContarEmprestimosAbertosDoLivroCorreto() {
+        LoanManager loanManager = new LoanManager();
+
+        // Emprestar livro 1 para usuario 1
+        loanManager.borrowBook(1, 1, "2026-05-01", "2026-05-20", "email", 14, "test", 0);
+
+        // Contar emprestimos abertos do livro 1 deve ser 1
+        int countBook1 = LegacyDatabase.countOpenLoansByBook(1);
+        assertEquals("Livro 1 deve ter 1 emprestimo aberto", 1, countBook1);
+
+        // Contar emprestimos abertos do livro 2 deve ser 0 (nenhum emprestimo feito)
+        int countBook2 = LegacyDatabase.countOpenLoansByBook(2);
+        assertEquals("Livro 2 nao deve ter emprestimos abertos", 0, countBook2);
+    }
+
+    @Test
+    public void deveRetornarZeroParaLivroSemEmprestimo() {
+        // Nenhum emprestimo foi feito
+        int count = LegacyDatabase.countOpenLoansByBook(3);
+        assertEquals("Livro sem emprestimos deve retornar zero", 0, count);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void deveLancarExcecaoQuandoBookIdInvalidoEmContagem() {
+        LegacyDatabase.countOpenLoansByBook(-1);
+    }
 }

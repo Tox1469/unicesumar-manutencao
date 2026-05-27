@@ -3,7 +3,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class LegacyDatabase {
+
+    private static final Logger logger = LogManager.getLogger(LegacyDatabase.class);
 
     // MAINTENANCE NOTE:
     // Hidden global state is shared across all modules.
@@ -179,6 +184,13 @@ public class LegacyDatabase {
     }
 
     public static int countOpenLoansByBook(int bookId) {
+        // Programacao por Contrato: pre-condicao fail-fast
+        if (bookId <= 0) {
+            throw new IllegalArgumentException("bookId deve ser maior que zero");
+        }
+
+        logger.info("Contando emprestimos abertos para bookId={}", bookId);
+
         int c = 0;
         for (Map<String, Object> loan : loans) {
             if (((Integer) loan.get("bookId")).intValue() == bookId) {
@@ -187,6 +199,8 @@ public class LegacyDatabase {
                 }
             }
         }
+
+        logger.info("Total de emprestimos abertos para bookId={}: {}", bookId, c);
         return c;
     }
 

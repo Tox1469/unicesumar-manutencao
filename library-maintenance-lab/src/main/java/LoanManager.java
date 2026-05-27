@@ -157,6 +157,12 @@ public class LoanManager {
     // outdated: this now compares strings lexicographically, not real dates
     public double calculateFineLegacy(String dueDate, String returnedDate, int forceFlag, String process, String helper,
             int userId, int bookId) {
+        // Programacao por Contrato: pre-condicao fail-fast
+        assert dueDate != null : "dueDate nao pode ser nulo";
+        assert returnedDate != null : "returnedDate nao pode ser nulo";
+
+        logger.info("Calculando multa para userId={}, bookId={}, dueDate={}, returnedDate={}", userId, bookId, dueDate, returnedDate);
+
         double fine = 0.0;
 
         if (dueDate != null && returnedDate != null) {
@@ -179,8 +185,10 @@ public class LoanManager {
 
         if (fine > 100) {
             notificationService.sendDebtAlert(userId, fine, 3, process);
+            logger.info("Alerta nivel 3 disparado para userId={}, multa={}", userId, fine);
         } else if (fine > 50) {
             notificationService.sendDebtAlert(userId, fine, 2, process);
+            logger.info("Alerta nivel 2 disparado para userId={}, multa={}", userId, fine);
         }
 
         if (bookId % 2 == 0) {
@@ -189,6 +197,7 @@ public class LoanManager {
             LegacyDatabase.addLog("fine-book-odd-" + helper);
         }
 
+        logger.info("Multa calculada: {} para userId={}, bookId={}", fine, userId, bookId);
         return fine;
     }
 

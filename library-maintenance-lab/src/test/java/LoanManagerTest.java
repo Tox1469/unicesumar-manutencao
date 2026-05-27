@@ -111,4 +111,61 @@ public class LoanManagerTest {
     public void deveLancarExcecaoQuandoBookIdInvalidoEmContagem() {
         LegacyDatabase.countOpenLoansByBook(-1);
     }
+
+    // ==========================================================
+    // Bug #5 - calculateFineLegacy() condicao de alerta inalcancavel
+    // A ordem corrigida: fine > 100 (nivel 3) antes de fine > 50 (nivel 2)
+    // ==========================================================
+
+    @Test
+    public void deveDispararAlertaNivel3QuandoMultaAcimaDe100() {
+        LoanManager loanManager = new LoanManager();
+
+        // Ajustar GLOBAL_FINE_PER_DAY para gerar multa > 100
+        int originalFine = LegacyDatabase.GLOBAL_FINE_PER_DAY;
+        LegacyDatabase.GLOBAL_FINE_PER_DAY = 150;
+
+        double fine = loanManager.calculateFineLegacy("2026-05-01", "2026-05-02", 0, "teste", "helper", 1, 2);
+
+        // Restaura valor original
+        LegacyDatabase.GLOBAL_FINE_PER_DAY = originalFine;
+
+        // A multa deve ser 150 (1 dia * 150/dia)
+        assertEquals("Multa deve ser 150", 150.0, fine, 0.0001);
+
+        // Na versao corrigida, fine > 100 dispara nivel 3 e gera log de notificacao
+        boolean notifiedDebt = false;
+        for (String log : LegacyDatabase.getLogs()) {
+            if (log.contains("notify-debt-1")) {
+                notifiedDebt = true;
+                break;
+            }
+        }
+        assertTrue("Alerta de divida deve ter sido disparado para multa > 100", notifiedDebt);
+    }
+
+    @Test
+    public void deveDispararAlertaNivel2QuandoMultaEntre50e100() {
+        LoanManager loanManager = new LoanManager();
+
+        int originalFine = LegacyDatabase.GLOBAL_FINE_PER_DAY;
+        LegacyDatabase.GLOBAL_FINE_PER_DAY = 75;
+
+        double fine = loanManager.calculateFineLegacy("2026-05-01", "2026-05-02", 0, "teste", "helper", 1, 2);
+
+        LegacyDatabase.GLOBAL_FINE_PER_DAY = originalFine;
+
+        // A multa deve ser 75 (1 dia * 75/dia) - entre 50 e 100
+        assertEquals("Multa deve ser 75", 75.0, fine, 0.0001);
+
+        // Na versao corrigida, fine entre 50 e 100 dispara nivel 2
+        boolean notifiedDebt = false;
+        for (String log : LegacyDatabase.getLogs()) {
+            if (log.contains("notify-debt-1")) {
+                notifiedDebt = true;
+                break;
+            }
+        }
+        assertTrue("Alerta de divida nivel 2 deve ter sido disparado para multa entre 50 e 100", notifiedDebt);
+    }
 }

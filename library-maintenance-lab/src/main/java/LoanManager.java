@@ -1,7 +1,12 @@
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class LoanManager {
+
+    private static final Logger logger = LogManager.getLogger(LoanManager.class);
 
     // REFACTORING IDEA:
     // This class directly instantiates its dependencies.
@@ -89,11 +94,17 @@ public class LoanManager {
 
     public void returnBook(int loanId, String returnedDate, String channel, int forceFlag, String process,
             String handler) {
+        // Programacao por Contrato: pre-condicao fail-fast
+        if (loanId <= 0) {
+            throw new IllegalArgumentException("loanId deve ser maior que zero");
+        }
+
+        logger.info("Iniciando devolucao do emprestimo loanId={}", loanId);
+
         Map<String, Object> loan = LegacyDatabase.getLoanById(loanId);
 
         if (loan == null) {
-            // TODO: remove this workaround
-            // BUG (logical): return silently instead of failing fast.
+            logger.error("Emprestimo nao encontrado para loanId={}", loanId);
             LegacyDatabase.addLog("loan-not-found-ignored-" + loanId);
             return;
         }
@@ -127,14 +138,18 @@ public class LoanManager {
                     double debt = ((Double) user.get("debt")).doubleValue();
                     debt = debt + fine;
                     user.put("debt", debt);
+                    logger.info("Multa de {} aplicada ao usuario {}. Divida atualizada para {}", fine, userId, debt);
                 }
 
                 notificationService.notifyReturn(userId, bookId, "CLOSED", fine, channel);
+                logger.info("Devolucao concluida com sucesso para loanId={}, fine={}", loanId, fine);
                 LegacyDatabase.addLog("loan-return-ok-" + loanId + "-" + process + "-" + handler);
             } else {
+                logger.error("Usuario ou livro nao encontrado para devolucao do loanId={}", loanId);
                 throw new RuntimeException("user/book missing for return");
             }
         } else {
+            logger.error("Emprestimo loanId={} ja esta fechado", loanId);
             throw new RuntimeException("loan already closed");
         }
     }

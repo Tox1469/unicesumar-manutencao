@@ -1,4 +1,7 @@
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -33,5 +36,47 @@ public class LoanManagerTest {
         double fine = loanManager.calculateFineLegacy("2026-05-10", "2026-05-10", 0, "teste", "helper", 1, 2);
 
         assertEquals(0.0, fine, 0.0001);
+    }
+
+    // ==========================================================
+    // Bug #2 - returnBook() deve SOMAR multa na divida do usuario
+    // ==========================================================
+
+    @Test
+    public void deveSomarMultaNaDividaAoDevolver() {
+        LoanManager loanManager = new LoanManager();
+
+        // Emprestar livro 1 (Clean Code) para usuario 1 (Ana)
+        int loanId = loanManager.borrowBook(1, 1, "2026-05-01", "2026-05-10", "email", 14, "test", 0);
+
+        // Devolver com atraso (returnedDate > dueDate) e forceFlag=0 para gerar multa
+        loanManager.returnBook(loanId, "2026-05-15", "email", 0, "test", "handler");
+
+        // A divida do usuario deve ter AUMENTADO (somou a multa), nao diminuido
+        Map<String, Object> user = LegacyDatabase.getUserById(1);
+        double debt = ((Double) user.get("debt")).doubleValue();
+        assertTrue("A divida do usuario deve ser positiva apos multa por atraso", debt > 0);
+    }
+
+    @Test
+    public void deveManterDividaZeroQuandoDevolverSemAtraso() {
+        LoanManager loanManager = new LoanManager();
+
+        // Emprestar livro 1 para usuario 1
+        int loanId = loanManager.borrowBook(1, 1, "2026-05-01", "2026-05-20", "email", 14, "test", 0);
+
+        // Devolver antes da data limite (sem atraso)
+        loanManager.returnBook(loanId, "2026-05-10", "email", 0, "test", "handler");
+
+        // A divida deve continuar zero
+        Map<String, Object> user = LegacyDatabase.getUserById(1);
+        double debt = ((Double) user.get("debt")).doubleValue();
+        assertEquals("Divida deve permanecer zero sem atraso", 0.0, debt, 0.0001);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void deveLancarExcecaoQuandoLoanIdInvalido() {
+        LoanManager loanManager = new LoanManager();
+        loanManager.returnBook(-1, "2026-05-15", "email", 0, "test", "handler");
     }
 }
